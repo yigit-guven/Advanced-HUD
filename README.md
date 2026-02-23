@@ -65,8 +65,10 @@ Customization options are managed via the `advanced-hud.json` configuration file
 
 - [Modrinth](https://modrinth.com/mod/advancedhud)
 - [CurseForge](https://www.curseforge.com/minecraft/mc-mods/advanced-hud)
+- [Wiki](https://github.com/yigit-guven/Advanced-Hud/wiki)
 - [Issue Tracker](https://github.com/yigit-guven/Advanced-Hud/issues)
 - [Source Code](https://github.com/yigit-guven/Advanced-Hud)
+- [Discord Server](https://discord.gg/aPk7Qs5d4H)
 
 ---
 
