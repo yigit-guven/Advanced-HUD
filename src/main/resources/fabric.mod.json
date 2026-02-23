@@ -3,15 +3,17 @@
 	"id": "advanced-hud",
 	"version": "${version}",
 	"name": "Advanced Hud",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Client side Minecraft mod that adds a highly customizable HUD that provides dynamic info on whatever you're looking at.",
 	"authors": [
-		"Me!"
+		"Yigit Guven"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://modrinth.com/mod/advancedhud",
+		"sources": "https://github.com/yigit-guven/Advanced-Hud",
+		"issues": "https://github.com/yigit-guven/Advanced-Hud/issues",
+		"wiki": "https://github.com/yigit-guven/Advanced-Hud/wiki"
 	},
-	"license": "CC0-1.0",
+	"license": "GPL-3.0",
 	"icon": "assets/advanced-hud/icon.png",
 	"environment": "*",
 	"entrypoints": {

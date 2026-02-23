@@ -1,10 +1,12 @@
 package com.yigit.advancedhud;
 
+import com.yigit.advancedhud.render.HudRenderer;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 
 public class AdvancedHudClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
-		// This entrypoint is suitable for setting up client-specific logic, such as rendering.
+		HudRenderCallback.EVENT.register(new HudRenderer());
 	}
 }

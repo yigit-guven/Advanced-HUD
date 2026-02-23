@@ -1,0 +1,9 @@
+- **Dynamic Raycasting**: Implemented logic to detect blocks and entities the player is currently looking at.
+- **Advanced HUD Overlay**:
+    - Added display for block names and IDs.
+    - Added display for entity names and a dynamic health bar for living entities.
+- **Customization System**:
+    - Created a JSON-based configuration system recorded in `config/advanced-hud.json`.
+    - Added options to toggle HUD visibility, adjust X/Y offsets, and hide specific info (like block IDs).
+- **Client Integration**: Registered the HUD renderer to the Fabric client entrypoint.
+- **License**: Switched project license to GPL-3.0.
