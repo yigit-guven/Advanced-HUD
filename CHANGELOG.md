@@ -1,8 +1,19 @@
-- **HUD Beautification**:
-    - New vanilla-inspired tooltip background with purple borders and gradients.
-    - Added a distinct outer frame covering the HUD for a more premium look.
-    - Dynamic item icons for blocks being looked at.
-    - Heart-themed health bar with a border and vibrant red color.
-- Improved HUD layout and typography to match Minecraft aesthetics.
-- Updated `TargetInfo` to provide `ItemStack` data for icons.
-- Incremental version update to 1.0.1.
+- **Strictly Client-Sided**: The mod is now 100% client-side. You can connect to any vanilla or modded server safely.
+- **Enhanced Block Information**:
+    - Added display for effective tools (Pickaxe, Axe, etc.) and mining requirements.
+    - Added crop growth percentage for all major crops.
+    - Added waterlogged status indicator.
+    - Added a visual **Breaking Progress Bar** at the bottom of the HUD.
+    - Added **Beehive occupancy** count for nests and hives.
+    - Added **Container contents** count (e.g., "Items: 15/27") for chests, shulker boxes, etc.
+- **Detailed Entity Stats**:
+    - Added **Horse Stats**: Precise speed (b/s) and jump strength for horses and variants.
+    - Added **Villager Info**: Displays profession and level.
+    - Added display for entity armor and tamed ownership.
+    - Added optional technical entity ID toggle.
+- **System Improvements**:
+    - Dynamic UI layout that adjusts height based on visible information.
+    - Refined color-coded categorized information for better readability.
+    - Fixed an issue where the configuration file wouldn't update with new options.
+    - Improved stability by fixing a potential Mixin registration crash.
+    - Cleaned up project structure and removed example boilerplate.

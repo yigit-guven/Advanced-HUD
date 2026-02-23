@@ -2,7 +2,7 @@ package com.yigit.advancedhud.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.yigit.advancedhud.AdvancedHud;
+import com.yigit.advancedhud.AdvancedHudClient;
 import net.fabricmc.loader.api.FabricLoader;
 
 import java.io.File;
@@ -20,6 +20,19 @@ public class ModConfig {
     public int yOffset = 10;
     public boolean showEntityHealth = true;
     public boolean showBlockId = true;
+    public boolean showModName = true;
+    public boolean showEffectiveTool = true;
+    public boolean showHarvestLevel = true;
+    public boolean showCropGrowth = true;
+    public boolean showEntityArmor = true;
+    public boolean showEntityOwner = true;
+    public boolean showEntityId = false;
+    public boolean showWaterlogged = true;
+    public boolean showBreakingProgress = true;
+    public boolean showHorseStats = true;
+    public boolean showVillagerInfo = true;
+    public boolean showBeeCount = true;
+    public boolean showContainerInfo = true;
 
     private static ModConfig INSTANCE;
 
@@ -38,9 +51,12 @@ public class ModConfig {
         }
 
         try (FileReader reader = new FileReader(CONFIG_FILE)) {
-            return GSON.fromJson(reader, ModConfig.class);
+            ModConfig config = GSON.fromJson(reader, ModConfig.class);
+            if (config == null) config = new ModConfig();
+            config.save(); // Ensure any new fields are written back
+            return config;
         } catch (IOException e) {
-            AdvancedHud.LOGGER.error("Failed to load config", e);
+            AdvancedHudClient.LOGGER.error("Failed to load config", e);
             return new ModConfig();
         }
     }
@@ -49,7 +65,7 @@ public class ModConfig {
         try (FileWriter writer = new FileWriter(CONFIG_FILE)) {
             GSON.toJson(this, writer);
         } catch (IOException e) {
-            AdvancedHud.LOGGER.error("Failed to save config", e);
+            AdvancedHudClient.LOGGER.error("Failed to save config", e);
         }
     }
 }

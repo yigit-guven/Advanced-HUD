@@ -15,17 +15,13 @@
 	},
 	"license": "GPL-3.0",
 	"icon": "assets/advanced-hud/icon.png",
-	"environment": "*",
+	"environment": "client",
 	"entrypoints": {
-		"main": [
-			"com.yigit.advancedhud.AdvancedHud"
-		],
 		"client": [
 			"com.yigit.advancedhud.AdvancedHudClient"
 		]
 	},
 	"mixins": [
-		"advanced-hud.mixins.json",
 		{
 			"config": "advanced-hud.client.mixins.json",
 			"environment": "client"

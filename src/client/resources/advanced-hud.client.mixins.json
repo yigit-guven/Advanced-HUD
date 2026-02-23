@@ -3,7 +3,7 @@
 	"package": "com.yigit.advancedhud.mixin.client",
 	"compatibilityLevel": "JAVA_17",
 	"client": [
-		"ExampleClientMixin"
+		"ClientPlayerInteractionManagerAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1
