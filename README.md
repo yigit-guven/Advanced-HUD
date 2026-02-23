@@ -41,6 +41,7 @@ Customization options are managed via the `advanced-hud.json` configuration file
 - [Wiki](https://github.com/yigit-guven/Advanced-Hud/wiki)
 - [Issue Tracker](https://github.com/yigit-guven/Advanced-Hud/issues)
 - [Source Code](https://github.com/yigit-guven/Advanced-Hud)
+- [Discord Server](https://discord.gg/aPk7Qs5d4H)
 
 ---
 
@@ -53,4 +54,4 @@ Developed by [Yigit Guven](https://github.com/yigit-guven).
 
 ## License
 
-Licensed under the GPL-3.0 License. See the [LICENSE](LICENSE) file for more information.
+Licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/yigit-guven/Advanced-Hud/blob/fabric-1.20.1/LICENSE) file for more information.

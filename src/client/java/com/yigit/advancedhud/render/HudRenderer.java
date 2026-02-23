@@ -9,8 +9,6 @@ import net.minecraft.client.font.TextRenderer;
 
 public class HudRenderer implements HudRenderCallback {
     private final TargetInfo targetInfo = new TargetInfo();
-    private static final int BG_COLOR = 0x90000000;
-    private static final int TEXT_COLOR = 0xFFFFFF;
 
     @Override
     public void onHudRender(DrawContext drawContext, float tickDelta) {
@@ -33,40 +31,90 @@ public class HudRenderer implements HudRenderCallback {
 
         int nameWidth = textRenderer.getWidth(name);
         int infoWidth = textRenderer.getWidth(info);
-        int maxWidth = Math.max(nameWidth, infoWidth);
-
-        int padding = 5;
-        int boxWidth = maxWidth + padding * 2;
+        
         boolean showHealth = targetInfo.isEntity() && ModConfig.get().showEntityHealth && targetInfo.getHealth() >= 0;
-        int boxHeight = (info.isEmpty() ? 15 : 25) + (showHealth ? 10 : 0);
+        int healthBarWidth = 100;
+        
+        int contentWidth = Math.max(nameWidth, infoWidth);
+        if (showHealth) contentWidth = Math.max(contentWidth, healthBarWidth + 12);
+
+        boolean hasIcon = !targetInfo.getStack().isEmpty();
+        int iconSize = hasIcon ? 18 : 0;
+        int padding = 6;
+        
+        int boxWidth = contentWidth + padding * 2 + (hasIcon ? iconSize + 4 : 0);
+        int boxHeight = 0;
+        
+        // Calculate height
+        boxHeight += 12; // Name height
+        if (!info.isEmpty()) boxHeight += 10;
+        if (showHealth) boxHeight += 12;
+        boxHeight += padding * 2;
 
         // Position: Top Center + Config Offset
         int x = (screenWidth - boxWidth) / 2 + ModConfig.get().xOffset;
         int y = ModConfig.get().yOffset;
 
-        // Draw Background
-        drawContext.fill(x, y, x + boxWidth, y + boxHeight, BG_COLOR);
+        // Draw Background (Vanilla Tooltip Style)
+        renderTooltipBackground(drawContext, x, y, boxWidth, boxHeight);
         
+        int currentX = x + padding;
+        int currentY = y + padding;
+
+        // Draw Icon
+        if (hasIcon) {
+            drawContext.drawItem(targetInfo.getStack(), currentX, currentY + (boxHeight - padding * 2 - 16) / 2);
+            currentX += iconSize + 4;
+        }
+
         // Draw Name
-        drawContext.drawText(textRenderer, name, x + padding, y + padding, TEXT_COLOR, true);
+        drawContext.drawText(textRenderer, name, currentX, currentY, 0xFFFFFF, true);
+        currentY += 12;
         
         // Draw Extra Info
         if (!info.isEmpty()) {
-            drawContext.drawText(textRenderer, info, x + padding, y + padding + 12, 0xAAAAAA, true);
+            drawContext.drawText(textRenderer, info, currentX, currentY, 0xAAAAAA, true);
+            currentY += 10;
         }
 
         // Draw Health Bar if Entity
         if (showHealth) {
-            int barWidth = maxWidth;
-            int barHeight = 4;
-            int barX = x + padding;
-            int barY = y + boxHeight - padding - barHeight;
+            drawContext.drawText(textRenderer, "❤", currentX, currentY, 0xFF5555, true);
+            
+            int barX = currentX + 12;
+            int barY = currentY + 2;
+            int barHeight = 5;
             
             float healthPercent = Math.max(0, Math.min(1, targetInfo.getHealth() / targetInfo.getMaxHealth()));
-            int currentHealthWidth = (int) (barWidth * healthPercent);
+            int currentHealthWidth = (int) (healthBarWidth * healthPercent);
 
-            drawContext.fill(barX, barY, barX + barWidth, barY + barHeight, 0xFF440000);
-            drawContext.fill(barX, barY, barX + currentHealthWidth, barY + barHeight, 0xFFFF0000);
+            drawContext.fill(barX - 1, barY - 1, barX + healthBarWidth + 1, barY + barHeight + 1, 0xFF000000);
+            drawContext.fill(barX, barY, barX + healthBarWidth, barY + barHeight, 0xFF440000);
+            drawContext.fill(barX, barY, barX + currentHealthWidth, barY + barHeight, 0xFFFF5555);
         }
+    }
+
+    private void renderTooltipBackground(DrawContext context, int x, int y, int width, int height) {
+        int bgColor = 0xF0100010;
+        int borderColorStart = 0x505000FF;
+        int borderColorEnd = (borderColorStart & 0xFEFEFE) >> 1 | borderColorStart & 0xFF000000;
+        
+        // Frame colors
+        int frameOuter = 0xFF222222;
+        int frameInner = 0xFF444444;
+
+        // Draw Frame
+        context.fill(x - 2, y - 2, x + width + 2, y + height + 2, frameOuter);
+        context.fill(x - 1, y - 1, x + width + 1, y + height + 1, frameInner);
+
+        // Main background
+        context.fill(x + 1, y, x + width - 1, y + height, bgColor);
+        context.fill(x, y + 1, x + width, y + height - 1, bgColor);
+
+        // Border
+        context.fill(x + 1, y + 1, x + width - 1, y + 2, borderColorStart);
+        context.fill(x + 1, y + height - 2, x + width - 1, y + height - 1, borderColorEnd);
+        context.fillGradient(x + 1, y + 2, x + 2, y + height - 2, borderColorStart, borderColorEnd);
+        context.fillGradient(x + width - 2, y + 2, x + width - 1, y + height - 2, borderColorStart, borderColorEnd);
     }
 }

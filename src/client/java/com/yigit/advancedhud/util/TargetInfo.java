@@ -15,6 +15,7 @@ public class TargetInfo {
     private float health = -1;
     private float maxHealth = -1;
     private boolean isEntity = false;
+    private net.minecraft.item.ItemStack stack = net.minecraft.item.ItemStack.EMPTY;
 
     public void update(MinecraftClient client) {
         HitResult hit = client.crosshairTarget;
@@ -28,6 +29,7 @@ public class TargetInfo {
             this.name = state.getBlock().getName().getString();
             this.extraInfo = Registries.BLOCK.getId(state.getBlock()).toString();
             this.isEntity = false;
+            this.stack = new net.minecraft.item.ItemStack(state.getBlock());
             this.health = -1;
         } else if (hit.getType() == HitResult.Type.ENTITY && hit instanceof EntityHitResult entityHit) {
             Entity entity = entityHit.getEntity();
@@ -41,6 +43,7 @@ public class TargetInfo {
                 this.health = -1;
                 this.extraInfo = "Entity";
             }
+            this.stack = net.minecraft.item.ItemStack.EMPTY;
         } else {
             reset();
         }
@@ -52,6 +55,7 @@ public class TargetInfo {
         this.health = -1;
         this.maxHealth = -1;
         this.isEntity = false;
+        this.stack = net.minecraft.item.ItemStack.EMPTY;
     }
 
     public String getName() { return name; }
@@ -59,5 +63,6 @@ public class TargetInfo {
     public float getHealth() { return health; }
     public float getMaxHealth() { return maxHealth; }
     public boolean isEntity() { return isEntity; }
+    public net.minecraft.item.ItemStack getStack() { return stack; }
     public boolean hasTarget() { return !name.isEmpty(); }
 }

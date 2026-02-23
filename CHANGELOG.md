@@ -1,9 +1,8 @@
-- **Dynamic Raycasting**: Implemented logic to detect blocks and entities the player is currently looking at.
-- **Advanced HUD Overlay**:
-    - Added display for block names and IDs.
-    - Added display for entity names and a dynamic health bar for living entities.
-- **Customization System**:
-    - Created a JSON-based configuration system recorded in `config/advanced-hud.json`.
-    - Added options to toggle HUD visibility, adjust X/Y offsets, and hide specific info (like block IDs).
-- **Client Integration**: Registered the HUD renderer to the Fabric client entrypoint.
-- **License**: Switched project license to GPL-3.0.
+- **HUD Beautification**:
+    - New vanilla-inspired tooltip background with purple borders and gradients.
+    - Added a distinct outer frame covering the HUD for a more premium look.
+    - Dynamic item icons for blocks being looked at.
+    - Heart-themed health bar with a border and vibrant red color.
+- Improved HUD layout and typography to match Minecraft aesthetics.
+- Updated `TargetInfo` to provide `ItemStack` data for icons.
+- Incremental version update to 1.0.1.
