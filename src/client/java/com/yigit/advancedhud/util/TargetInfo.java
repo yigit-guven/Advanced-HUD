@@ -9,19 +9,21 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.registry.Registries;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.state.property.Properties;
+import net.minecraft.block.entity.*;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.util.Identifier;
-import com.yigit.advancedhud.mixin.client.ClientPlayerInteractionManagerAccessor;
 import net.minecraft.entity.passive.AbstractHorseEntity;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.village.VillagerData;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.BeehiveBlockEntity;
+import net.minecraft.util.Identifier;
+import com.yigit.advancedhud.mixin.client.ClientPlayerInteractionManagerAccessor;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.state.property.Properties;
+import net.minecraft.state.property.IntProperty;
+import net.minecraft.state.property.Property;
+import java.util.Optional;
 
 public class TargetInfo {
     private String name = "";
@@ -38,6 +40,7 @@ public class TargetInfo {
     private boolean isEntity = false;
     private String entityId = "";
     private boolean isWaterlogged = false;
+    private boolean canHarvest = false;
     private float breakingProgress = 0;
     private float horseJump = -1;
     private float horseSpeed = -1;
@@ -46,7 +49,9 @@ public class TargetInfo {
     private int beeCount = -1;
     private int itemCount = -1;
     private int inventorySize = -1;
+    private String harvestLevel = "";
     private net.minecraft.item.ItemStack stack = net.minecraft.item.ItemStack.EMPTY;
+    private LivingEntity targetedEntity = null;
 
     public void update(MinecraftClient client) {
         HitResult hit = client.crosshairTarget;
@@ -71,36 +76,32 @@ public class TargetInfo {
             else if (state.isIn(BlockTags.SHOVEL_MINEABLE)) this.effectiveTool = "Shovel";
             else if (state.isIn(BlockTags.HOE_MINEABLE)) this.effectiveTool = "Hoe";
             
-            // Crop Growth
-            if (state.contains(Properties.AGE_7)) {
-                this.growthProgress = (state.get(Properties.AGE_7) * 100) / 7;
-                this.isCrops = true;
-            } else if (state.contains(Properties.AGE_3)) {
-                this.growthProgress = (state.get(Properties.AGE_3) * 100) / 3;
-                this.isCrops = true;
-            } else if (state.contains(Properties.AGE_15)) {
-                this.growthProgress = (state.get(Properties.AGE_15) * 100) / 15;
-                this.isCrops = true;
-            } else if (state.contains(Properties.AGE_25)) {
-                this.growthProgress = (state.get(Properties.AGE_25) * 100) / 25;
-                this.isCrops = true;
-            } else if (state.contains(Properties.AGE_5)) {
-                this.growthProgress = (state.get(Properties.AGE_5) * 100) / 5;
-                this.isCrops = true;
-            } else if (state.contains(Properties.AGE_4)) {
-                this.growthProgress = (state.get(Properties.AGE_4) * 100) / 4;
-                this.isCrops = true;
-            } else if (state.contains(Properties.AGE_2)) {
-                this.growthProgress = (state.get(Properties.AGE_2) * 100) / 2;
-                this.isCrops = true;
-            } else if (state.contains(Properties.AGE_1)) {
-                this.growthProgress = (state.get(Properties.AGE_1) * 100) / 1;
-                this.isCrops = true;
+            this.harvestLevel = "";
+            if (state.isIn(BlockTags.NEEDS_DIAMOND_TOOL)) this.harvestLevel = "Diamond";
+            else if (state.isIn(BlockTags.NEEDS_IRON_TOOL)) this.harvestLevel = "Iron";
+            else if (state.isIn(BlockTags.NEEDS_STONE_TOOL)) this.harvestLevel = "Stone";
+            
+            // Generic Crop Growth
+            this.isCrops = false;
+            this.growthProgress = -1;
+            for (Property<?> property : state.getProperties()) {
+                if (property instanceof IntProperty intProperty && (property.getName().equals("age") || property.getName().endsWith("_age"))) {
+                    int age = state.get(intProperty);
+                    int maxAge = intProperty.getValues().stream().mapToInt(v -> (Integer) v).max().orElse(0);
+                    if (maxAge > 0) {
+                        this.growthProgress = (age * 100) / maxAge;
+                        this.isCrops = true;
+                        break;
+                    }
+                }
             }
 
-            // Waterlogged
-            if (state.contains(Properties.WATERLOGGED)) {
-                this.isWaterlogged = state.get(Properties.WATERLOGGED);
+            // Waterlogged — always reset, even for blocks that don't have the property
+            this.isWaterlogged = state.contains(Properties.WATERLOGGED) && state.get(Properties.WATERLOGGED);
+
+            // Harvestability
+            if (client.player != null) {
+                this.canHarvest = client.player.canHarvest(state);
             }
 
             // Breaking Progress
@@ -118,29 +119,9 @@ public class TargetInfo {
                 this.beeCount = -1;
             }
 
-            if (blockEntity instanceof Inventory inventory) {
-                int count = 0;
-                boolean hasData = false;
-                for (int i = 0; i < inventory.size(); i++) {
-                    if (!inventory.getStack(i).isEmpty()) {
-                        count++;
-                        hasData = true;
-                    }
-                }
-                // Only show if we found items OR if we are in singleplayer (where data is more likely synced)
-                // In multiplayer, standard chests don't sync inventory to the client.
-                if (hasData || client.isInSingleplayer()) {
-                    this.itemCount = count;
-                    this.inventorySize = inventory.size();
-                } else {
-                    // Don't show misleading 0/27 in multiplayer
-                    this.itemCount = -1;
-                    this.inventorySize = -1;
-                }
-            } else {
-                this.itemCount = -1;
-                this.inventorySize = -1;
-            }
+            // Removed container inventory logic to keep mod client-side only
+            this.itemCount = -1;
+            this.inventorySize = -1;
 
         } else if (hit.getType() == HitResult.Type.ENTITY && hit instanceof EntityHitResult entityHit) {
             Entity entity = entityHit.getEntity();
@@ -151,6 +132,7 @@ public class TargetInfo {
             this.modName = getModName(id.getNamespace());
             
             if (entity instanceof LivingEntity living) {
+                this.targetedEntity = living;
                 this.health = living.getHealth();
                 this.maxHealth = living.getMaxHealth();
                 this.extraInfo = String.format("%.1f / %.1f HP", health, maxHealth);
@@ -174,6 +156,7 @@ public class TargetInfo {
             } else {
                 this.health = -1;
                 this.extraInfo = "Entity";
+                this.targetedEntity = null;
             }
             this.stack = net.minecraft.item.ItemStack.EMPTY;
         } else {
@@ -194,6 +177,7 @@ public class TargetInfo {
         this.isCrops = false;
         this.isEntity = false;
         this.entityId = "";
+        this.canHarvest = false;
         this.breakingProgress = 0;
         this.horseJump = -1;
         this.horseSpeed = -1;
@@ -202,7 +186,9 @@ public class TargetInfo {
         this.beeCount = -1;
         this.itemCount = -1;
         this.inventorySize = -1;
+        this.harvestLevel = "";
         this.stack = net.minecraft.item.ItemStack.EMPTY;
+        this.targetedEntity = null;
     }
 
     private String getModName(String namespace) {
@@ -224,6 +210,7 @@ public class TargetInfo {
     public String getEntityId() { return entityId; }
     public boolean isEntity() { return isEntity; }
     public boolean isWaterlogged() { return isWaterlogged; }
+    public boolean canHarvest() { return canHarvest; }
     public float getBreakingProgress() { return breakingProgress; }
     public float getHorseJump() { return horseJump; }
     public float getHorseSpeed() { return horseSpeed; }
@@ -232,6 +219,8 @@ public class TargetInfo {
     public int getBeeCount() { return beeCount; }
     public int getItemCount() { return itemCount; }
     public int getInventorySize() { return inventorySize; }
+    public String getHarvestLevel() { return harvestLevel; }
     public net.minecraft.item.ItemStack getStack() { return stack; }
+    public LivingEntity getTargetedEntity() { return targetedEntity; }
     public boolean hasTarget() { return !name.isEmpty(); }
 }

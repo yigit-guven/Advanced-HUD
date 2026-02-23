@@ -33,6 +33,7 @@ public class ModConfig {
     public boolean showVillagerInfo = true;
     public boolean showBeeCount = true;
     public boolean showContainerInfo = true;
+    public boolean showEntityModel = true;
 
     private static ModConfig INSTANCE;
 
