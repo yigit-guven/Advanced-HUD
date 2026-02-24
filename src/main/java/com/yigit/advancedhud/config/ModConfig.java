@@ -3,7 +3,7 @@ package com.yigit.advancedhud.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.yigit.advancedhud.AdvancedHudClient;
-import net.fabricmc.loader.api.FabricLoader;
+import net.neoforged.fml.loading.FMLPaths;
 
 import java.io.File;
 import java.io.FileReader;
@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class ModConfig {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final File CONFIG_FILE = new File(FabricLoader.getInstance().getConfigDir().toFile(), "advanced-hud.json");
+    private static final File CONFIG_FILE = new File(FMLPaths.CONFIGDIR.get().toFile(), "advanced_hud.json");
 
     // Config options
     public boolean enabled = true;
@@ -44,6 +44,11 @@ public class ModConfig {
         }
         return INSTANCE;
     }
+
+    public static File getConfigFile() {
+        return CONFIG_FILE;
+    }
+
 
     private static ModConfig load() {
         if (!CONFIG_FILE.exists()) {

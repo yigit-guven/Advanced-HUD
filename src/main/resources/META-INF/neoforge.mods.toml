@@ -1,0 +1,38 @@
+modLoader="javafml"
+loaderVersion="[2,)"
+license="GPL-3.0"
+issueTrackerURL="https://github.com/yigit-guven/Advanced-Hud/issues"
+
+[[mods]]
+modId="advanced_hud"
+version="${mod_version}"
+displayName="Advanced Hud"
+authors="Yigit Guven"
+description='''
+Client side Minecraft mod that adds a highly customizable HUD that provides dynamic info on whatever you're looking at.
+'''
+displayTest="IGNORE_ALL_VERSION"
+saveConfig=true
+icon="assets/advanced_hud/icon.png"
+
+[mods.advanced_hud.links]
+homepage="https://modrinth.com/mod/advancedhud"
+sources="https://github.com/yigit-guven/Advanced-Hud"
+issues="https://github.com/yigit-guven/Advanced-Hud/issues"
+
+[[dependencies.advanced_hud]]
+    modId="neoforge"
+    type="required"
+    versionRange="[21.1.1,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.advanced_hud]]
+    modId="minecraft"
+    type="required"
+    versionRange="[1.21.1,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[mixins]]
+config = "advanced_hud.mixins.json"
