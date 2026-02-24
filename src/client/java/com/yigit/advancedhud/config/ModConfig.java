@@ -18,8 +18,9 @@ public class ModConfig {
     public boolean enabled = true;
     public int xOffset = 0;
     public int yOffset = 10;
+    public int hudTransparency = 80;
     public boolean showEntityHealth = true;
-    public boolean showBlockId = true;
+    public boolean showBlockId = false;
     public boolean showModName = true;
     public boolean showEffectiveTool = true;
     public boolean showHarvestLevel = true;

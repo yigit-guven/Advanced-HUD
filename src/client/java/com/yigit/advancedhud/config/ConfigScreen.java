@@ -29,19 +29,25 @@ public class ConfigScreen {
 
         general.addEntry(entry.startIntField(Text.literal("X Offset"), config.xOffset)
                 .setDefaultValue(0)
-                .setTooltip(Text.literal("Horizontal offset of the HUD from the centre."))
+                .setTooltip(Text.literal("Horizontal offset from the center."))
                 .setSaveConsumer(v -> config.xOffset = v)
                 .build());
 
         general.addEntry(entry.startIntField(Text.literal("Y Offset"), config.yOffset)
                 .setDefaultValue(10)
-                .setTooltip(Text.literal("Vertical offset of the HUD from the top."))
+                .setTooltip(Text.literal("Vertical offset from the top."))
                 .setSaveConsumer(v -> config.yOffset = v)
+                .build());
+
+        general.addEntry(entry.startIntSlider(Text.literal("HUD Transparency"), config.hudTransparency, 0, 100)
+                .setDefaultValue(80)
+                .setTooltip(Text.literal("Adjust the background transparency of the HUD (0-100)."))
+                .setSaveConsumer(v -> config.hudTransparency = v)
                 .build());
 
         general.addEntry(entry.startBooleanToggle(Text.literal("Show Mod Name"), config.showModName)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows the name of the mod that added the block/entity."))
+                .setTooltip(Text.literal("Shows the mod that added the block/entity."))
                 .setSaveConsumer(v -> config.showModName = v)
                 .build());
 
@@ -49,50 +55,50 @@ public class ConfigScreen {
         ConfigCategory blocks = builder.getOrCreateCategory(Text.literal("Blocks"));
 
         blocks.addEntry(entry.startBooleanToggle(Text.literal("Show Block ID"), config.showBlockId)
-                .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows the internal ID of the targeted block (e.g. minecraft:stone)."))
+                .setDefaultValue(false)
+                .setTooltip(Text.literal("Shows the internal ID of the block (e.g. minecraft:stone)."))
                 .setSaveConsumer(v -> config.showBlockId = v)
                 .build());
 
         blocks.addEntry(entry.startBooleanToggle(Text.literal("Show Effective Tool"), config.showEffectiveTool)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows which tool type is most effective on the block."))
+                .setTooltip(Text.literal("Shows the most effective tool type."))
                 .setSaveConsumer(v -> config.showEffectiveTool = v)
                 .build());
 
         blocks.addEntry(entry.startBooleanToggle(Text.literal("Show Harvest Level"), config.showHarvestLevel)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows the required tool tier to harvest the block (Stone / Iron / Diamond)."))
+                .setTooltip(Text.literal("Shows the required tool tier (Stone / Iron / Diamond)."))
                 .setSaveConsumer(v -> config.showHarvestLevel = v)
                 .build());
 
         blocks.addEntry(entry.startBooleanToggle(Text.literal("Show Crop Growth"), config.showCropGrowth)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows the growth percentage for crop blocks."))
+                .setTooltip(Text.literal("Shows the growth percentage for crops."))
                 .setSaveConsumer(v -> config.showCropGrowth = v)
                 .build());
 
         blocks.addEntry(entry.startBooleanToggle(Text.literal("Show Waterlogged"), config.showWaterlogged)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows a waterlogged indicator for blocks that support it."))
+                .setTooltip(Text.literal("Shows a 💧 indicator if the block is waterlogged."))
                 .setSaveConsumer(v -> config.showWaterlogged = v)
                 .build());
 
         blocks.addEntry(entry.startBooleanToggle(Text.literal("Show Breaking Progress"), config.showBreakingProgress)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows a progress bar while mining a block."))
+                .setTooltip(Text.literal("Shows progress bar while mining."))
                 .setSaveConsumer(v -> config.showBreakingProgress = v)
                 .build());
 
         blocks.addEntry(entry.startBooleanToggle(Text.literal("Show Bee Count"), config.showBeeCount)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows the number of bees inside a hive/nest."))
+                .setTooltip(Text.literal("Shows bee count inside hives/nests."))
                 .setSaveConsumer(v -> config.showBeeCount = v)
                 .build());
 
         blocks.addEntry(entry.startBooleanToggle(Text.literal("Show Container Info"), config.showContainerInfo)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows item count for containers (requires server-side access)."))
+                .setTooltip(Text.literal("Shows item counts for synced containers (e.g. Furnaces, Brewing Stands)."))
                 .setSaveConsumer(v -> config.showContainerInfo = v)
                 .build());
 
@@ -101,43 +107,43 @@ public class ConfigScreen {
 
         entities.addEntry(entry.startBooleanToggle(Text.literal("Show Entity Health"), config.showEntityHealth)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows a health bar and value for living entities."))
+                .setTooltip(Text.literal("Shows health bar and numerical value."))
                 .setSaveConsumer(v -> config.showEntityHealth = v)
                 .build());
 
         entities.addEntry(entry.startBooleanToggle(Text.literal("Show Entity Armor"), config.showEntityArmor)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows an armor bar for entities that have armor."))
+                .setTooltip(Text.literal("Shows armor bar based on protective gear."))
                 .setSaveConsumer(v -> config.showEntityArmor = v)
                 .build());
 
         entities.addEntry(entry.startBooleanToggle(Text.literal("Show Entity Model"), config.showEntityModel)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Renders a small 3-D model of the targeted entity inside the HUD."))
+                .setTooltip(Text.literal("Renders a small 3-D model of the entity."))
                 .setSaveConsumer(v -> config.showEntityModel = v)
                 .build());
 
         entities.addEntry(entry.startBooleanToggle(Text.literal("Show Entity ID"), config.showEntityId)
                 .setDefaultValue(false)
-                .setTooltip(Text.literal("Shows the internal entity type ID (e.g. minecraft:zombie)."))
+                .setTooltip(Text.literal("Shows the internal entity ID (e.g. minecraft:zombie)."))
                 .setSaveConsumer(v -> config.showEntityId = v)
                 .build());
 
         entities.addEntry(entry.startBooleanToggle(Text.literal("Show Entity Owner"), config.showEntityOwner)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows the owner name for tamed animals."))
+                .setTooltip(Text.literal("Shows the owner name for tamed entities."))
                 .setSaveConsumer(v -> config.showEntityOwner = v)
                 .build());
 
         entities.addEntry(entry.startBooleanToggle(Text.literal("Show Horse Stats"), config.showHorseStats)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows speed and jump height for horses and similar mobs."))
+                .setTooltip(Text.literal("Shows speed (m/s) and jump height for horses."))
                 .setSaveConsumer(v -> config.showHorseStats = v)
                 .build());
 
         entities.addEntry(entry.startBooleanToggle(Text.literal("Show Villager Info"), config.showVillagerInfo)
                 .setDefaultValue(true)
-                .setTooltip(Text.literal("Shows profession and trade level for villagers."))
+                .setTooltip(Text.literal("Shows profession and trading level."))
                 .setSaveConsumer(v -> config.showVillagerInfo = v)
                 .build());
 

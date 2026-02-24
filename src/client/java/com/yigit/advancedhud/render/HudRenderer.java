@@ -111,7 +111,7 @@ public class HudRenderer implements HudRenderCallback {
             int wH = 11 + 60 + 4 + textRenderer.getWidth(String.format("%.1f", targetInfo.getHealth()));
             wStatsTotal = Math.max(wStatsTotal, wH);
         }
-        if (targetInfo.isEntity() && config.showEntityArmor && targetInfo.getArmor() > 0) {
+        if (targetInfo.isEntity() && config.showEntityArmor && (targetInfo.getArmor() > 0 || targetInfo.getToughness() > 0)) {
             int wA = 11 + 60 + 4 + textRenderer.getWidth(String.valueOf(targetInfo.getArmor()));
             wStatsTotal = Math.max(wStatsTotal, wA);
         }
@@ -121,7 +121,7 @@ public class HudRenderer implements HudRenderCallback {
         int toolW = toolToRender.isEmpty() ? 0 : iconS + innerGap;
         
         int totalW = padding * 2 + iconW + mainAreaW + toolW;
-        int nLines = 1 + stats.size() + (showHealth ? 1 : 0);
+        int nLines = 1 + stats.size() + (showHealth ? 1 : 0) + (targetInfo.isEntity() && config.showEntityArmor && (targetInfo.getArmor() > 0 || targetInfo.getToughness() > 0) ? 1 : 0);
         int totalH = padding * 2 + titleH + (nLines > 1 ? (nLines - 1) * lineH : 0);
         if (showBreaking) totalH += 6;
         totalH = Math.max(totalH, padding * 2 + iconS);
@@ -205,9 +205,10 @@ public class HudRenderer implements HudRenderCallback {
             curY += lineH;
         }
 
-        // Armor Bar
-        if (targetInfo.isEntity() && config.showEntityArmor && targetInfo.getArmor() > 0) {
-            drawContext.drawText(textRenderer, "🛡", curX, curY, 0xAAAAAA, true);
+        // Armor & Toughness Bar
+        if (targetInfo.isEntity() && config.showEntityArmor && (targetInfo.getArmor() > 0 || targetInfo.getToughness() > 0)) {
+            boolean hasToughness = targetInfo.getToughness() > 0;
+            drawContext.drawText(textRenderer, hasToughness ? "🛡+" : "🛡", curX, curY, hasToughness ? 0x55FFFF : 0xAAAAAA, true);
             int barX = curX + 11, barY = curY + 2, barW = 60, barH = 5;
             float pct = Math.min(1, targetInfo.getArmor() / 20.0f); // Max 20 for standard display
             
@@ -216,11 +217,13 @@ public class HudRenderer implements HudRenderCallback {
             
             int progressW = (int)(barW * pct);
             if (progressW > 0) {
-                drawContext.fill(barX, barY, barX + progressW, barY + barH, 0xFFAAAAAA);
-                drawContext.fill(barX, barY, barX + progressW, barY + 1, 0xFFDDDDDD);
+                drawContext.fill(barX, barY, barX + progressW, barY + barH, hasToughness ? 0xFF55FFFF : 0xFFAAAAAA);
+                drawContext.fill(barX, barY, barX + progressW, barY + 1, hasToughness ? 0xFFAFFFFF : 0xFFDDDDDD);
             }
             
-            drawContext.drawText(textRenderer, String.valueOf(targetInfo.getArmor()), barX + barW + 4, curY, 0xFFFFFF, true);
+            String armorText = String.valueOf(targetInfo.getArmor());
+            if (hasToughness) armorText += " (+" + targetInfo.getToughness() + ")";
+            drawContext.drawText(textRenderer, armorText, barX + barW + 4, curY, 0xFFFFFF, true);
             curY += lineH;
         }
         
@@ -256,21 +259,21 @@ public class HudRenderer implements HudRenderCallback {
     }
 
     private void renderTooltipBackground(DrawContext context, int x, int y, int width, int height) {
-        // High-end glassmorphism-inspired background
-        int bgColor = 0xD0101010; // Darker, more opaque
-        int borderColor = 0x80FFFFFF; // Subtle white border
+        ModConfig config = ModConfig.get();
+        int alpha = (int) (config.hudTransparency * 2.55f); // Scale 0-100 to 0-255
         
-        // Main background with rounded-like appearance (using multiple fills for semi-rounded corners)
+        // High-end glassmorphism-inspired background
+        int bgColor = (alpha << 24) | 0x101010; // Darker background with adjusted alpha
+        int borderColor = (Math.min(alpha + 40, 255) << 24) | 0xFFFFFF; // Brighter border alpha
+        
+        // Main background
         context.fill(x + 1, y, x + width - 1, y + height, bgColor);
         context.fill(x, y + 1, x + width, y + height - 1, bgColor);
         
         // Subtle outline
         context.fill(x + 1, y, x + width - 1, y + 1, borderColor); // Top
-        context.fill(x + 1, y + height - 1, x + width - 1, y + height, 0x40FFFFFF); // Bottom (darker)
-        context.fillGradient(x, y + 1, x + 1, y + height - 1, borderColor, 0x40FFFFFF); // Left
-        context.fillGradient(x + width - 1, y + 1, x + width, y + height - 1, borderColor, 0x40FFFFFF); // Right
-        
-        // Gloss effect (optional, very subtle)
-        context.fillGradient(x + 1, y + 1, x + width - 1, y + 2, 0x20FFFFFF, 0x00FFFFFF);
+        context.fill(x + 1, y + height - 1, x + width - 1, y + height, (alpha / 4 << 24) | 0xFFFFFF); // Bottom
+        context.fillGradient(x, y + 1, x + 1, y + height - 1, borderColor, (alpha / 4 << 24) | 0xFFFFFF); // Left
+        context.fillGradient(x + width - 1, y + 1, x + width, y + height - 1, borderColor, (alpha / 4 << 24) | 0xFFFFFF); // Right
     }
 }

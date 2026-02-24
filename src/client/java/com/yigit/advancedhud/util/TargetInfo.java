@@ -31,6 +31,7 @@ public class TargetInfo {
     private float health = -1;
     private float maxHealth = -1;
     private int armor = 0;
+    private int toughness = 0;
     private String owner = "";
     private String version = "";
     private String modName = "";
@@ -113,15 +114,42 @@ public class TargetInfo {
             BlockPos pos = blockHit.getBlockPos();
             BlockEntity blockEntity = client.world.getBlockEntity(pos);
             
+            // Custom Name support (e.g. for renamed chests)
+            if (blockEntity instanceof net.minecraft.util.Nameable nameable && nameable.hasCustomName()) {
+                this.name = nameable.getDisplayName().getString();
+            }
+
             if (blockEntity instanceof BeehiveBlockEntity beehive) {
                 this.beeCount = beehive.getBeeCount();
             } else {
                 this.beeCount = -1;
             }
 
-            // Removed container inventory logic to keep mod client-side only
-            this.itemCount = -1;
-            this.inventorySize = -1;
+            // Refined container inventory logic
+            if (blockEntity instanceof Inventory inv) {
+                int totalItems = 0;
+                for (int i = 0; i < inv.size(); i++) {
+                    if (!inv.getStack(i).isEmpty()) totalItems++;
+                }
+                
+                // Heuristic: Standard chests/barrels often don't sync inventory to client unless opened.
+                // We avoid showing 0/27 for everything by only showing if items exist OR if it's a "synced" type.
+                boolean isLikelySynced = blockEntity instanceof AbstractFurnaceBlockEntity || 
+                                       blockEntity instanceof BrewingStandBlockEntity ||
+                                       blockEntity instanceof CampfireBlockEntity ||
+                                       blockEntity instanceof ChiseledBookshelfBlockEntity;
+
+                if (totalItems > 0 || isLikelySynced) {
+                    this.itemCount = totalItems;
+                    this.inventorySize = inv.size();
+                } else {
+                    this.itemCount = -1;
+                    this.inventorySize = -1;
+                }
+            } else {
+                this.itemCount = -1;
+                this.inventorySize = -1;
+            }
 
         } else if (hit.getType() == HitResult.Type.ENTITY && hit instanceof EntityHitResult entityHit) {
             Entity entity = entityHit.getEntity();
@@ -137,6 +165,7 @@ public class TargetInfo {
                 this.maxHealth = living.getMaxHealth();
                 this.extraInfo = String.format("%.1f / %.1f HP", health, maxHealth);
                 this.armor = (int) living.getAttributeValue(EntityAttributes.GENERIC_ARMOR);
+                this.toughness = (int) living.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
                 if (living instanceof TameableEntity tameable && tameable.isTamed() && tameable.getOwner() != null) {
                     this.owner = tameable.getOwner().getDisplayName().getString();
                 }
@@ -170,6 +199,7 @@ public class TargetInfo {
         this.health = -1;
         this.maxHealth = -1;
         this.armor = 0;
+        this.toughness = 0;
         this.owner = "";
         this.modName = "";
         this.effectiveTool = "";
@@ -202,6 +232,7 @@ public class TargetInfo {
     public float getHealth() { return health; }
     public float getMaxHealth() { return maxHealth; }
     public int getArmor() { return armor; }
+    public int getToughness() { return toughness; }
     public String getOwner() { return owner; }
     public String getModName() { return modName; }
     public String getEffectiveTool() { return effectiveTool; }

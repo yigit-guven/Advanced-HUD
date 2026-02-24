@@ -1,1 +1,7 @@
+- Introduce HUD transparency setting and UI slider (default 80) in `ModConfig`/`ConfigScreen`.
+- Adjust several option defaults and tooltip text for clarity (e.g., `showBlockId` default set to `false`).
+- Add armor toughness tracking to `TargetInfo` (field, getter, reset, and attribute read) and show toughness in the HUD.
+- Refine container inventory detection with heuristics and custom name support for `Nameable` block entities.
+- Update `HudRenderer` to account for toughness when computing layout and rendering the armor bar (different icon/color, appended toughness text).
+- Use configured transparency for tooltip background rendering.
 - Updated mod version to 1.0.4.

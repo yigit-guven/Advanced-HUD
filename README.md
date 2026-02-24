@@ -6,28 +6,31 @@ Advanced HUD is a client-side Minecraft utility designed to provide real-time, d
 
 ### Block Information
 - **Effective Tool**: Instantly see which tool you need (Pickaxe, Axe, etc.) to mine the block.
+- **Harvest Level**: Displays the required tool tier (Stone, Iron, Diamond, etc.).
 - **Breaking Progress**: A smooth, visual progress bar appears at the bottom of the HUD as you break a block.
 - **Crop Growth**: Displays the exact growth percentage for all major crops.
-- **Waterlogged Status**: Indicates if a block is waterlogged at a glance.
+- **Waterlogged Status**: Indicates if a block is waterlogged with a 💧 indicator.
 - **Beehive Occupancy**: Shows exactly how many bees are currently inside a beehive or bee nest.
-- **Container Details**: Displays item count and total capacity for chests, shulker boxes, and more (e.g., "Items: 15/27").
+- **Improved Container Details**: Displays item count and capacity for synced containers (Furnaces, Brewing Stands, etc.) with custom name support for renamed chests.
 
 ### Entity Statistics
-- **Horse Breeding Stats**: Displays precise movement speed (in blocks/second) and jump strength for horses and variants.
-- **Villager Profession**: Identifies the profession and level of any villager you look at.
 - **Combat Stats**: Shows the entity's health using a heart-themed bar and displays their armor value.
+- **Armor Toughness**: Displays armor toughness (🛡+) for high-defense entities.
+- **Horse Breeding Stats**: Displays precise movement speed (in m/s) and jump height.
+- **Villager Profession**: Identifies the profession and level of any villager you look at.
 - **Ownership**: Displays the owner's name for tamed entities (Wolves, Cats, etc.).
-- **Registry ID**: Optional display of technical registry IDs and mod sources.
+- **Visual Model**: Renders a small 3-D model of the targeted entity inside the HUD.
 
 ### Visuals & UI
-- **Vanilla Aesthetic**: Tooltips feature a familiar purple border and gradient background inspired by Minecraft's inventory.
-- **Dynamic Layout**: The interface automatically adjusts its height based on the available information.
+- **Glassmorphism Design**: High-end, transparent background with blurred borders and sleek micro-animations.
+- **Adjustable Transparency**: Fully customizable background opacity to suit your preference.
+- **Dynamic Layout**: The interface automatically adjusts height and width to fit the content perfectly.
 - **Performance**: Optimized to ensure zero impact on your framerate.
 
 ## Compatibility
-- **Vanilla Servers**: 100% compatible. Connect to any server (Realms, Hypixel, private SMPs) without issues.
-- **Client-Side Only**: Does NOT need to be installed on the server.
-- **Modpacks**: Designed to work seamlessly alongside other Fabric mods.
+- **Vanilla Servers**: 100% compatible. Connect to any server without issues.
+- **Strictly Client-Side**: Does NOT need to be installed on the server.
+- **Modpacks**: Works seamlessly alongside ModMenu and Cloth Config.
 
 ## Installation
 
@@ -38,26 +41,30 @@ Advanced HUD is a client-side Minecraft utility designed to provide real-time, d
 
 ## Configuration
 
-Customization options are managed via the `advanced-hud.json` configuration file, located in the `config` directory.
+Customization options are managed via the in-game ModMenu screen or the `advanced-hud.json` configuration file.
 
 | Option | Default | Description |
 | :--- | :--- | :--- |
-| `enabled` | `true` | Enables or disables the HUD overlay globally. |
-| `xOffset` | `0` | Adjusts the horizontal position. |
-| `yOffset` | `10` | Adjusts the vertical position. |
+| `enabled` | `true`| Master toggle for the entire HUD. |
+| `xOffset` | `0` | Horizontal offset from the center. |
+| `yOffset` | `10`| Vertical offset from the top. |
+| `hudTransparency` | `80` | Background transparency (0-100). |
 | `showModName` | `true` | Shows which mod a target belongs to. |
-| `showEffectiveTool` | `true` | Shows the required tool for blocks. |
+| `showBlockId` | `false` | Shows the internal block ID (e.g. minecraft:stone). |
+| `showEffectiveTool` | `true` | Shows the most effective tool type. |
+| `showHarvestLevel` | `true` | Shows the required tool tier. |
 | `showCropGrowth` | `true` | Shows growth percentage for crops. |
 | `showWaterlogged` | `true` | Shows if a block is waterlogged. |
 | `showBreakingProgress` | `true` | Shows the block breaking bar. |
 | `showBeeCount` | `true` | Shows how many bees are in a hive. |
-| `showContainerInfo` | `true` | Shows item counts for containers. |
-| `showEntityHealth` | `true` | Shows the health bar for entities. |
-| `showEntityArmor` | `true` | Shows the armor value of entities. |
+| `showContainerInfo` | `true` | Shows item counts for synced containers. |
+| `showEntityHealth` | `true` | Shows health bar and numerical value. |
+| `showEntityArmor` | `true` | Shows armor and toughness bars. |
+| `showEntityModel` | `true` | Renders a 3-D model of the entity. |
 | `showEntityOwner` | `true` | Shows the owner of tamed mobs. |
 | `showHorseStats` | `true` | Shows horse speed and jump height. |
 | `showVillagerInfo` | `true` | Shows villager profession and level. |
-| `showEntityId` | `false` | Shows technical registry IDs. |
+| `showEntityId` | `false`| Shows technical entity IDs. |
 
 ---
 
@@ -78,4 +85,4 @@ Developed by [Yigit Guven](https://github.com/yigit-guven).
 
 ## License
 
-Licensed under the GPL-3.0 License. See the [LICENSE](LICENSE) file for more information.
+Licensed under the GPL-3.0 License. See the [LICENSE](https://github.com/yigit-guven/Advanced-HUD/blob/fabric-1.20.1/LICENSE) file for more information.
