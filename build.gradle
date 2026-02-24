@@ -1,94 +1,103 @@
-plugins {
-	id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
-	id 'maven-publish'
+buildscript {
+    repositories {
+        maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
+        classpath 'org.spongepowered:mixingradle:0.7.+'
+    }
 }
 
-version = "${project.mod_version}-fabric-${project.minecraft_version}"
-group = project.maven_group
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: 'org.spongepowered.mixin'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
 
-base {
-	archivesName = project.archives_base_name
+version = "${mod_version}"
+group = "${mod_group}"
+archivesBaseName = "${mod_id}"
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: "${mappings_channel}", version: "${mappings_version}"
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+            mods {
+                "${mod_id}" {
+                    source sourceSets.main
+                }
+            }
+        }
+
+    }
 }
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
-	maven { url "https://maven.shedaniel.me/" }       // Cloth Config
-	maven { url "https://maven.terraformersmc.com/releases/" } // Mod Menu
-}
-
-loom {
-	splitEnvironmentSourceSets()
-
-	mods {
-		"advanced-hud" {
-			sourceSet sourceSets.main
-			sourceSet sourceSets.client
-		}
-	}
-
+    maven { url "https://maven.shedaniel.me/" }       // Cloth Config
 }
 
 dependencies {
-	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
-	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-
-	// Cloth Config (provides screen API, required by Mod Menu config screens)
-	modApi("me.shedaniel.cloth:cloth-config-fabric:${project.cloth_config_version}") {
-		exclude(group: "net.fabricmc.fabric-api")
-	}
-
-	// Mod Menu (optional at runtime, required at compile time for the entrypoint)
-	modImplementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-}
-
-processResources {
-	inputs.property "version", project.version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": inputs.properties.version
-	}
+    // Cloth Config for Forge
+    implementation fg.deobf("me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}")
 }
 
 tasks.withType(JavaCompile).configureEach {
-	it.options.release = 17
+    options.encoding = 'UTF-8'
 }
 
-java {
-	// Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-	// if it is present.
-	// If you remove this line, sources will not be generated.
-	withSourcesJar()
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mod_id", project.mod_id
+    inputs.property "mod_authors", project.mod_authors
+    inputs.property "mod_description", project.mod_description
+    inputs.property "mod_license", project.mod_license
 
-	sourceCompatibility = JavaVersion.VERSION_17
-	targetCompatibility = JavaVersion.VERSION_17
+    filesMatching("META-INF/mods.toml") {
+        expand "version": project.version, "mod_id": project.mod_id, "mod_authors": project.mod_authors, "mod_description": project.mod_description, "mod_license": project.mod_license
+    }
 }
 
 jar {
-	inputs.property "archivesName", project.base.archivesName
-
-	from("LICENSE") {
-		rename { "${it}_${inputs.properties.archivesName}"}
-	}
+    manifest {
+        attributes([
+                "Specification-Title"     : "${mod_id}",
+                "Specification-Vendor"    : "${mod_authors}",
+                "Specification-Version"   : "1",
+                "Implementation-Title"    : project.name,
+                "Implementation-Version"  : project.version,
+                "Implementation-Vendor"   : "${mod_authors}",
+                "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+                "MixinConfigs": "${mod_id}.mixins.json"
+        ])
+    }
 }
 
-// configure the maven publication
-publishing {
-	publications {
-		create("mavenJava", MavenPublication) {
-			artifactId = project.archives_base_name
-			from components.java
-		}
-	}
+jar.finalizedBy('reobfJar')
 
-	// See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
-	repositories {
-		// Add repositories to publish to here.
-		// Notice: This block does NOT have the same function as the block in the top level.
-		// The repositories here will be used for publishing your artifact, not for
-		// retrieving dependencies.
-	}
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact jar
+        }
+    }
+    repositories {
+        maven {
+            url "file://${project.projectDir}/mcmodsrepo"
+        }
+    }
 }
