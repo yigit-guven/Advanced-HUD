@@ -2,7 +2,8 @@ package com.yigit.advancedhud;
 
 import com.yigit.advancedhud.render.HudRenderer;
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,6 +16,10 @@ public class AdvancedHudClient implements ClientModInitializer {
 		LOGGER.info("Advanced HUD Initialized ");
 		// Force config load and save to ensure it's up to date
 		com.yigit.advancedhud.config.ModConfig.get();
-		HudRenderCallback.EVENT.register(new HudRenderer());
+		
+		HudElementRegistry.addLast(
+            Identifier.fromNamespaceAndPath(MOD_ID, "hud_renderer"), 
+            new HudRenderer()
+        );
 	}
 }

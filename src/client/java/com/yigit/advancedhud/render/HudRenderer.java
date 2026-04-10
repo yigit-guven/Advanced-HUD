@@ -2,58 +2,42 @@ package com.yigit.advancedhud.render;
 
 import com.yigit.advancedhud.config.ModConfig;
 import com.yigit.advancedhud.util.TargetInfo;
-import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.screen.ingame.InventoryScreen;
-import net.minecraft.entity.LivingEntity;
+import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElement;
+import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
-public class HudRenderer implements HudRenderCallback {
+public class HudRenderer implements HudElement {
     private final TargetInfo targetInfo = new TargetInfo();
     
-    private static final java.util.List<net.minecraft.item.ItemStack> PICKAXES = java.util.Arrays.asList(
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.NETHERITE_PICKAXE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.DIAMOND_PICKAXE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_PICKAXE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.STONE_PICKAXE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLDEN_PICKAXE)
-    );
-    private static final java.util.List<net.minecraft.item.ItemStack> AXES = java.util.Arrays.asList(
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.NETHERITE_AXE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.DIAMOND_AXE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_AXE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.STONE_AXE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLDEN_AXE)
-    );
-    private static final java.util.List<net.minecraft.item.ItemStack> SHOVELS = java.util.Arrays.asList(
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.NETHERITE_SHOVEL),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.DIAMOND_SHOVEL),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_SHOVEL),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.STONE_SHOVEL),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLDEN_SHOVEL)
-    );
-    private static final java.util.List<net.minecraft.item.ItemStack> HOES = java.util.Arrays.asList(
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.NETHERITE_HOE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.DIAMOND_HOE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.IRON_HOE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.STONE_HOE),
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.GOLDEN_HOE)
-    );
-    private static final java.util.List<net.minecraft.item.ItemStack> SHEARS = java.util.Arrays.asList(
-        new net.minecraft.item.ItemStack(net.minecraft.item.Items.SHEARS)
-    );
+    private static java.util.List<ItemStack> PICKAXES, AXES, SHOVELS, HOES, SHEARS;
+
+    private static void ensureItemStacks() {
+        if (PICKAXES != null) return;
+        PICKAXES = java.util.Arrays.asList(new ItemStack(Items.NETHERITE_PICKAXE), new ItemStack(Items.DIAMOND_PICKAXE), new ItemStack(Items.IRON_PICKAXE), new ItemStack(Items.STONE_PICKAXE), new ItemStack(Items.GOLDEN_PICKAXE));
+        AXES = java.util.Arrays.asList(new ItemStack(Items.NETHERITE_AXE), new ItemStack(Items.DIAMOND_AXE), new ItemStack(Items.IRON_AXE), new ItemStack(Items.STONE_AXE), new ItemStack(Items.GOLDEN_AXE));
+        SHOVELS = java.util.Arrays.asList(new ItemStack(Items.NETHERITE_SHOVEL), new ItemStack(Items.DIAMOND_SHOVEL), new ItemStack(Items.IRON_SHOVEL), new ItemStack(Items.STONE_SHOVEL), new ItemStack(Items.GOLDEN_SHOVEL));
+        HOES = java.util.Arrays.asList(new ItemStack(Items.NETHERITE_HOE), new ItemStack(Items.DIAMOND_HOE), new ItemStack(Items.IRON_HOE), new ItemStack(Items.STONE_HOE), new ItemStack(Items.GOLDEN_HOE));
+        SHEARS = java.util.Arrays.asList(new ItemStack(Items.SHEARS));
+    }
 
     @Override
-    public void onHudRender(DrawContext drawContext, float tickDelta) {
-        MinecraftClient client = MinecraftClient.getInstance();
-        if (client == null || client.options.hudHidden || !ModConfig.get().enabled) return;
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, DeltaTracker deltaTracker) {
+        ensureItemStacks();
+        float tickDelta = deltaTracker.getGameTimeDeltaPartialTick(true);
+        Minecraft client = Minecraft.getInstance();
+        if (client == null || client.options.hideGui || !ModConfig.get().enabled) return;
 
         targetInfo.update(client);
         if (!targetInfo.hasTarget()) return;
 
-        TextRenderer textRenderer = client.textRenderer;
-        int screenWidth = client.getWindow().getScaledWidth();
+        Font textRenderer = client.font;
+        int screenWidth = client.getWindow().getGuiScaledWidth();
         ModConfig config = ModConfig.get();
         
         // --- DATA COLLECTION ---
@@ -80,9 +64,9 @@ public class HudRenderer implements HudRenderCallback {
         boolean showHealth = targetInfo.isEntity() && config.showEntityHealth && targetInfo.getHealth() >= 0;
         boolean showBreaking = !targetInfo.isEntity() && config.showBreakingProgress && targetInfo.getBreakingProgress() > 0;
         
-        net.minecraft.item.ItemStack toolToRender = net.minecraft.item.ItemStack.EMPTY;
+        ItemStack toolToRender = ItemStack.EMPTY;
         if (!targetInfo.isEntity() && config.showEffectiveTool && !targetInfo.getEffectiveTool().isEmpty()) {
-            java.util.List<net.minecraft.item.ItemStack> tools = java.util.Collections.emptyList();
+            java.util.List<ItemStack> tools = java.util.Collections.emptyList();
             switch (targetInfo.getEffectiveTool()) {
                 case "Pickaxe" -> tools = PICKAXES;
                 case "Axe" -> tools = AXES;
@@ -97,22 +81,22 @@ public class HudRenderer implements HudRenderCallback {
         int padding = 4;
         int innerGap = 4;
         int lineH = 10;
-        int titleH = 12;
         int iconS = 16;
         
         String title = targetInfo.getName();
         String modName = config.showModName ? targetInfo.getModName() : "";
-        int wTitle = textRenderer.getWidth(title);
-        int wMod = modName.isEmpty() ? 0 : textRenderer.getWidth(modName);
+        int titleH = textRenderer.lineHeight + 1;
+        int wTitle = textRenderer.width(title);
+        int wMod = modName.isEmpty() ? 0 : textRenderer.width(modName);
         
         int wStatsTotal = 0;
-        for (StatInfo s : stats) wStatsTotal = Math.max(wStatsTotal, textRenderer.getWidth(s.icon) + 12 + textRenderer.getWidth(s.text));
+        for (StatInfo s : stats) wStatsTotal = Math.max(wStatsTotal, textRenderer.width(s.icon) + 12 + textRenderer.width(s.text));
         if (showHealth) {
-            int wH = 11 + 60 + 4 + textRenderer.getWidth(String.format("%.1f", targetInfo.getHealth()));
+            int wH = 11 + 60 + 4 + textRenderer.width(String.format("%.1f", targetInfo.getHealth()));
             wStatsTotal = Math.max(wStatsTotal, wH);
         }
         if (targetInfo.isEntity() && config.showEntityArmor && (targetInfo.getArmor() > 0 || targetInfo.getToughness() > 0)) {
-            int wA = 11 + 60 + 4 + textRenderer.getWidth(String.valueOf(targetInfo.getArmor()));
+            int wA = 11 + 60 + 4 + textRenderer.width(String.valueOf(targetInfo.getArmor()));
             wStatsTotal = Math.max(wStatsTotal, wA);
         }
         
@@ -128,23 +112,24 @@ public class HudRenderer implements HudRenderCallback {
         
         // Entity Model Reservation
         boolean drawEntityModel = config.showEntityModel && targetInfo.isEntity() && targetInfo.getTargetedEntity() != null;
-        int entityW = drawEntityModel ? 20 : 0; // Slightly narrower reservation
+        int entityW = drawEntityModel ? 20 : 0;
         int entityScale = 15;
         if (drawEntityModel) {
             LivingEntity target = targetInfo.getTargetedEntity();
-            float maxDim = Math.max(target.getHeight(), target.getWidth());
-            // Precise scaling: Aim for ~20 pixels in size, with constraints
+            float maxDim = Math.max(target.getBbHeight(), target.getBbWidth());
+            float scale = 30.0f / maxDim;
+            if (target.isBaby()) scale *= 2.0f;
             entityScale = (int) (18.0f / Math.max(0.5f, maxDim));
             entityScale = Math.max(5, Math.min(20, entityScale));
             
             totalW += entityW + innerGap;
-            totalH = Math.max(totalH, padding * 2 + 22); // Reduced height bloat
+            totalH = Math.max(totalH, padding * 2 + 22);
         }
 
         int x = (screenWidth - totalW) / 2 + config.xOffset;
         int y = config.yOffset;
 
-        renderTooltipBackground(drawContext, x, y, totalW, totalH);
+        renderTooltipBackground(guiGraphics, x, y, totalW, totalH);
         
         // --- DRAWING ---
         int curX = x + padding;
@@ -155,52 +140,55 @@ public class HudRenderer implements HudRenderCallback {
             // Simpler vertical centering:
             iconY = y + (totalH - iconS) / 2;
             if (showBreaking) iconY -= 2; 
-            drawContext.drawItem(targetInfo.getStack(), curX, iconY);
+            guiGraphics.item(targetInfo.getStack(), curX, iconY);
             curX += iconW;
         }
 
         if (drawEntityModel) {
             int modelX = curX + entityW / 2;
             int modelY = y + totalH - padding - 2;
-            // Slightly adjusted rotation for better 3D depth
-            InventoryScreen.drawEntity(drawContext, modelX, modelY, entityScale, (float)modelX - 45, (float)modelY - 50, targetInfo.getTargetedEntity());
+            InventoryScreen.extractEntityInInventoryFollowsMouse(guiGraphics, modelX - 15, modelY - 20, modelX + 15, modelY, entityScale, 0.0625f, (float)modelX - 45, (float)modelY - 50, targetInfo.getTargetedEntity());
             curX += entityW + innerGap;
         }
         
-        drawContext.drawText(textRenderer, title, curX, curY, 0xFFFFFF, true);
-        if (wMod > 0) {
-            drawContext.drawText(textRenderer, modName, x + totalW - padding - toolW - wMod, curY, 0x5555FF, true);
+        // Title & Mod Name
+        int titleX = curX;
+        guiGraphics.text(textRenderer, title, titleX, curY, 0xFFFFFFFF);
+        if (!modName.isEmpty()) {
+            int mX = x + totalW - padding - toolW - wMod;
+            // Ensure mod name doesn't overlap title if they are too close
+            if (mX < titleX + wTitle + 10) mX = titleX + wTitle + 10;
+            guiGraphics.text(textRenderer, modName, mX, curY, 0xFF7777FF);
         }
-        curY += titleH;
+        curY += titleH + 1; // Extra pixel of breathing room
         
         for (StatInfo s : stats) {
-            drawContext.drawText(textRenderer, s.icon, curX, curY, 0xFFFFFF, true);
-            drawContext.drawText(textRenderer, s.text, curX + 12, curY, s.color, true);
+            guiGraphics.text(textRenderer, s.icon, curX, curY, 0xFFFFFFFF);
+            guiGraphics.text(textRenderer, s.text, curX + 11, curY, 0xFF000000 | s.color); // Tightened gap
             curY += lineH;
         }
         
         if (showHealth) {
             // Label
-            drawContext.drawText(textRenderer, "❤", curX, curY, 0xFF5555, true);
+            guiGraphics.text(textRenderer, "❤", curX, curY, 0xFFFF3333);
             
             // Modern bar design
             int barX = curX + 11, barY = curY + 2, barW = 60, barH = 5;
             float pct = Math.max(0, Math.min(1, targetInfo.getHealth() / targetInfo.getMaxHealth()));
             
-            // Shadow / Background
-            drawContext.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0x88000000);
-            drawContext.fill(barX, barY, barX + barW, barY + barH, 0x44FF0000);
+            // Background
+            guiGraphics.fill(barX, barY, barX + barW, barY + barH, 0x44FF0000);
             
             // Progress
             int progressW = (int)(barW * pct);
             if (progressW > 0) {
-                drawContext.fill(barX, barY, barX + progressW, barY + barH, 0xFFFF3333);
-                drawContext.fill(barX, barY, barX + progressW, barY + 1, 0xFFFF7777);
+                guiGraphics.fill(barX, barY, barX + progressW, barY + barH, 0xFFFF3333);
+                guiGraphics.fill(barX, barY, barX + progressW, barY + 1, 0xFFFF7777); // Lighter top edge
             }
             
             // Health text
             String healthText = String.format("%.1f", targetInfo.getHealth());
-            drawContext.drawText(textRenderer, healthText, barX + barW + 4, curY, 0xFFFFFF, true);
+            guiGraphics.text(textRenderer, healthText, barX + barW + 4, curY, 0xFFFFFFFF);
             
             curY += lineH;
         }
@@ -208,22 +196,22 @@ public class HudRenderer implements HudRenderCallback {
         // Armor & Toughness Bar
         if (targetInfo.isEntity() && config.showEntityArmor && (targetInfo.getArmor() > 0 || targetInfo.getToughness() > 0)) {
             boolean hasToughness = targetInfo.getToughness() > 0;
-            drawContext.drawText(textRenderer, hasToughness ? "🛡+" : "🛡", curX, curY, hasToughness ? 0x55FFFF : 0xAAAAAA, true);
+            guiGraphics.text(textRenderer, hasToughness ? "🛡+" : "🛡", curX, curY, hasToughness ? 0xFF55FFFF : 0xFFAAAAAA);
             int barX = curX + 11, barY = curY + 2, barW = 60, barH = 5;
             float pct = Math.min(1, targetInfo.getArmor() / 20.0f); // Max 20 for standard display
             
-            drawContext.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0x88000000);
-            drawContext.fill(barX, barY, barX + barW, barY + barH, 0x44555555);
+            guiGraphics.fill(barX - 1, barY - 1, barX + barW + 1, barY + barH + 1, 0x88000000);
+            guiGraphics.fill(barX, barY, barX + barW, barY + barH, 0x44555555);
             
             int progressW = (int)(barW * pct);
             if (progressW > 0) {
-                drawContext.fill(barX, barY, barX + progressW, barY + barH, hasToughness ? 0xFF55FFFF : 0xFFAAAAAA);
-                drawContext.fill(barX, barY, barX + progressW, barY + 1, hasToughness ? 0xFFAFFFFF : 0xFFDDDDDD);
+                guiGraphics.fill(barX, barY, barX + progressW, barY + barH, hasToughness ? 0xFF55FFFF : 0xFFAAAAAA);
+                guiGraphics.fill(barX, barY, barX + progressW, barY + 1, hasToughness ? 0xFFAFFFFF : 0xFFDDDDDD);
             }
             
             String armorText = String.valueOf(targetInfo.getArmor());
             if (hasToughness) armorText += " (+" + targetInfo.getToughness() + ")";
-            drawContext.drawText(textRenderer, armorText, barX + barW + 4, curY, 0xFFFFFF, true);
+            guiGraphics.text(textRenderer, armorText, barX + barW + 4, curY, 0xFFFFFFFF);
             curY += lineH;
         }
         
@@ -231,18 +219,18 @@ public class HudRenderer implements HudRenderCallback {
             int tx = x + totalW - padding - iconS;
             int ty = y + (totalH - iconS) / 2;
             if (showBreaking) ty -= 2;
-            drawContext.drawItem(toolToRender, tx, ty);
+            guiGraphics.item(toolToRender, tx, ty);
             String hIcon = targetInfo.canHarvest() ? "✔" : "✘";
-            int hCol = targetInfo.canHarvest() ? 0x55FF55 : 0xFF5555;
-            drawContext.drawText(textRenderer, hIcon, tx + 12, ty + 10, hCol, true);
+            int hCol = targetInfo.canHarvest() ? 0xFF55FF55 : 0xFFFF5555;
+            guiGraphics.text(textRenderer, hIcon, tx + 12, ty + 10, hCol);
         }
         
         if (showBreaking) {
             int bW = totalW - padding * 2, bH = 2, bY = y + totalH - padding - bH;
             float prog = Math.max(0, Math.min(1, targetInfo.getBreakingProgress()));
-            drawContext.fill(x + padding - 1, bY - 1, x + padding + bW + 1, bY + bH + 1, 0xFF000000);
-            drawContext.fill(x + padding, bY, x + padding + bW, bY + bH, 0xFF444400);
-            drawContext.fill(x + padding, bY, x + padding + (int)(bW * prog), bY + bH, 0xFFFFFF55);
+            guiGraphics.fill(x + padding - 1, bY - 1, x + padding + bW + 1, bY + bH + 1, 0xFF000000);
+            guiGraphics.fill(x + padding, bY, x + padding + bW, bY + bH, 0xFF444400);
+            guiGraphics.fill(x + padding, bY, x + padding + (int)(bW * prog), bY + bH, 0xFFFFFF55);
         }
     }
 
@@ -258,13 +246,13 @@ public class HudRenderer implements HudRenderCallback {
         }
     }
 
-    private void renderTooltipBackground(DrawContext context, int x, int y, int width, int height) {
+    private void renderTooltipBackground(GuiGraphicsExtractor context, int x, int y, int width, int height) {
         ModConfig config = ModConfig.get();
         int alpha = (int) (config.hudTransparency * 2.55f); // Scale 0-100 to 0-255
         
         // High-end glassmorphism-inspired background
         int bgColor = (alpha << 24) | 0x101010; // Darker background with adjusted alpha
-        int borderColor = (Math.min(alpha + 40, 255) << 24) | 0xFFFFFF; // Brighter border alpha
+        int borderColor = (Math.min(alpha + 40, 255) << 24) | 0x303030; // Brighter border alpha
         
         // Main background
         context.fill(x + 1, y, x + width - 1, y + height, bgColor);
@@ -272,8 +260,8 @@ public class HudRenderer implements HudRenderCallback {
         
         // Subtle outline
         context.fill(x + 1, y, x + width - 1, y + 1, borderColor); // Top
-        context.fill(x + 1, y + height - 1, x + width - 1, y + height, (alpha / 4 << 24) | 0xFFFFFF); // Bottom
-        context.fillGradient(x, y + 1, x + 1, y + height - 1, borderColor, (alpha / 4 << 24) | 0xFFFFFF); // Left
-        context.fillGradient(x + width - 1, y + 1, x + width, y + height - 1, borderColor, (alpha / 4 << 24) | 0xFFFFFF); // Right
+        context.fill(x + 1, y + height - 1, x + width - 1, y + height, (alpha / 4 << 24) | 0x303030); // Bottom
+        context.fillGradient(x, y + 1, x + 1, y + height - 1, borderColor, (alpha / 4 << 24) | 0x303030); // Left
+        context.fillGradient(x + width - 1, y + 1, x + width, y + height - 1, borderColor, (alpha / 4 << 24) | 0x303030); // Right
     }
 }

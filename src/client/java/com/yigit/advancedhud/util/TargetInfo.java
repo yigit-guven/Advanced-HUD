@@ -1,28 +1,32 @@
 package com.yigit.advancedhud.util;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.registry.Registries;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.block.entity.*;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.passive.TameableEntity;
-import net.minecraft.entity.passive.AbstractHorseEntity;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.village.VillagerData;
-import net.minecraft.util.Identifier;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.TamableAnimal;
+import net.minecraft.world.entity.animal.equine.AbstractHorse;
+import net.minecraft.world.entity.npc.villager.Villager;
+import net.minecraft.world.entity.npc.villager.VillagerData;
 import com.yigit.advancedhud.mixin.client.ClientPlayerInteractionManagerAccessor;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.state.property.Properties;
-import net.minecraft.state.property.IntProperty;
-import net.minecraft.state.property.Property;
+import net.minecraft.world.Container;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.Nameable;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import java.util.Optional;
 
 public class TargetInfo {
@@ -51,44 +55,44 @@ public class TargetInfo {
     private int itemCount = -1;
     private int inventorySize = -1;
     private String harvestLevel = "";
-    private net.minecraft.item.ItemStack stack = net.minecraft.item.ItemStack.EMPTY;
+    private ItemStack stack = ItemStack.EMPTY;
     private LivingEntity targetedEntity = null;
 
-    public void update(MinecraftClient client) {
-        HitResult hit = client.crosshairTarget;
+    public void update(Minecraft client) {
+        HitResult hit = client.hitResult;
         if (hit == null || hit.getType() == HitResult.Type.MISS) {
             reset();
             return;
         }
 
         if (hit.getType() == HitResult.Type.BLOCK && hit instanceof BlockHitResult blockHit) {
-            BlockState state = client.world.getBlockState(blockHit.getBlockPos());
+            BlockState state = client.level.getBlockState(blockHit.getBlockPos());
             this.name = state.getBlock().getName().getString();
-            Identifier id = Registries.BLOCK.getId(state.getBlock());
+            Identifier id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
             this.extraInfo = id.toString();
             this.modName = getModName(id.getNamespace());
             this.isEntity = false;
-            this.stack = new net.minecraft.item.ItemStack(state.getBlock());
+            this.stack = new ItemStack(state.getBlock());
             this.health = -1;
             
             // Tool Info
-            if (state.isIn(BlockTags.PICKAXE_MINEABLE)) this.effectiveTool = "Pickaxe";
-            else if (state.isIn(BlockTags.AXE_MINEABLE)) this.effectiveTool = "Axe";
-            else if (state.isIn(BlockTags.SHOVEL_MINEABLE)) this.effectiveTool = "Shovel";
-            else if (state.isIn(BlockTags.HOE_MINEABLE)) this.effectiveTool = "Hoe";
+            if (state.is(BlockTags.MINEABLE_WITH_PICKAXE)) this.effectiveTool = "Pickaxe";
+            else if (state.is(BlockTags.MINEABLE_WITH_AXE)) this.effectiveTool = "Axe";
+            else if (state.is(BlockTags.MINEABLE_WITH_SHOVEL)) this.effectiveTool = "Shovel";
+            else if (state.is(BlockTags.MINEABLE_WITH_HOE)) this.effectiveTool = "Hoe";
             
             this.harvestLevel = "";
-            if (state.isIn(BlockTags.NEEDS_DIAMOND_TOOL)) this.harvestLevel = "Diamond";
-            else if (state.isIn(BlockTags.NEEDS_IRON_TOOL)) this.harvestLevel = "Iron";
-            else if (state.isIn(BlockTags.NEEDS_STONE_TOOL)) this.harvestLevel = "Stone";
+            if (state.is(BlockTags.NEEDS_DIAMOND_TOOL)) this.harvestLevel = "Diamond";
+            else if (state.is(BlockTags.NEEDS_IRON_TOOL)) this.harvestLevel = "Iron";
+            else if (state.is(BlockTags.NEEDS_STONE_TOOL)) this.harvestLevel = "Stone";
             
             // Generic Crop Growth
             this.isCrops = false;
             this.growthProgress = -1;
             for (Property<?> property : state.getProperties()) {
-                if (property instanceof IntProperty intProperty && (property.getName().equals("age") || property.getName().endsWith("_age"))) {
-                    int age = state.get(intProperty);
-                    int maxAge = intProperty.getValues().stream().mapToInt(v -> (Integer) v).max().orElse(0);
+                if (property instanceof IntegerProperty intProperty && (property.getName().equals("age") || property.getName().endsWith("_age"))) {
+                    int age = state.getValue(intProperty);
+                    int maxAge = intProperty.getPossibleValues().stream().mapToInt(v -> (Integer) v).max().orElse(0);
                     if (maxAge > 0) {
                         this.growthProgress = (age * 100) / maxAge;
                         this.isCrops = true;
@@ -98,38 +102,38 @@ public class TargetInfo {
             }
 
             // Waterlogged — always reset, even for blocks that don't have the property
-            this.isWaterlogged = state.contains(Properties.WATERLOGGED) && state.get(Properties.WATERLOGGED);
+            this.isWaterlogged = state.hasProperty(BlockStateProperties.WATERLOGGED) && state.getValue(BlockStateProperties.WATERLOGGED);
 
             // Harvestability
             if (client.player != null) {
-                this.canHarvest = client.player.canHarvest(state);
+                this.canHarvest = client.player.hasCorrectToolForDrops(state);
             }
 
             // Breaking Progress
-            if (client.interactionManager != null) {
-                this.breakingProgress = ((ClientPlayerInteractionManagerAccessor) client.interactionManager).getBreakingProgress();
+            if (client.gameMode != null) {
+                this.breakingProgress = ((ClientPlayerInteractionManagerAccessor) client.gameMode).getBreakingProgress();
             }
 
             // Block Entity Data (Beehive, Containers)
             BlockPos pos = blockHit.getBlockPos();
-            BlockEntity blockEntity = client.world.getBlockEntity(pos);
+            BlockEntity blockEntity = client.level.getBlockEntity(pos);
             
             // Custom Name support (e.g. for renamed chests)
-            if (blockEntity instanceof net.minecraft.util.Nameable nameable && nameable.hasCustomName()) {
+            if (blockEntity instanceof Nameable nameable && nameable.hasCustomName()) {
                 this.name = nameable.getDisplayName().getString();
             }
 
             if (blockEntity instanceof BeehiveBlockEntity beehive) {
-                this.beeCount = beehive.getBeeCount();
+                this.beeCount = beehive.getOccupantCount();
             } else {
                 this.beeCount = -1;
             }
 
             // Refined container inventory logic
-            if (blockEntity instanceof Inventory inv) {
+            if (blockEntity instanceof Container inv) {
                 int totalItems = 0;
-                for (int i = 0; i < inv.size(); i++) {
-                    if (!inv.getStack(i).isEmpty()) totalItems++;
+                for (int i = 0; i < inv.getContainerSize(); i++) {
+                    if (!inv.getItem(i).isEmpty()) totalItems++;
                 }
                 
                 // Heuristic: Standard chests/barrels often don't sync inventory to client unless opened.
@@ -137,11 +141,11 @@ public class TargetInfo {
                 boolean isLikelySynced = blockEntity instanceof AbstractFurnaceBlockEntity || 
                                        blockEntity instanceof BrewingStandBlockEntity ||
                                        blockEntity instanceof CampfireBlockEntity ||
-                                       blockEntity instanceof ChiseledBookshelfBlockEntity;
+                                       blockEntity instanceof ChiseledBookShelfBlockEntity;
 
                 if (totalItems > 0 || isLikelySynced) {
                     this.itemCount = totalItems;
-                    this.inventorySize = inv.size();
+                    this.inventorySize = inv.getContainerSize();
                 } else {
                     this.itemCount = -1;
                     this.inventorySize = -1;
@@ -155,7 +159,7 @@ public class TargetInfo {
             Entity entity = entityHit.getEntity();
             this.name = entity.getDisplayName().getString();
             this.isEntity = true;
-            Identifier id = Registries.ENTITY_TYPE.getId(entity.getType());
+            Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
             this.entityId = id.toString();
             this.modName = getModName(id.getNamespace());
             
@@ -164,30 +168,30 @@ public class TargetInfo {
                 this.health = living.getHealth();
                 this.maxHealth = living.getMaxHealth();
                 this.extraInfo = String.format("%.1f / %.1f HP", health, maxHealth);
-                this.armor = (int) living.getAttributeValue(EntityAttributes.GENERIC_ARMOR);
-                this.toughness = (int) living.getAttributeValue(EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
-                if (living instanceof TameableEntity tameable && tameable.isTamed() && tameable.getOwner() != null) {
-                    this.owner = tameable.getOwner().getDisplayName().getString();
+                this.armor = (int) living.getAttributeValue(Attributes.ARMOR);
+                this.toughness = (int) living.getAttributeValue(Attributes.ARMOR_TOUGHNESS);
+                if (living instanceof TamableAnimal tamable && tamable.isTame() && tamable.getOwner() != null) {
+                    this.owner = tamable.getOwner().getDisplayName().getString();
                 }
                 
                 // Horse Stats
-                if (living instanceof AbstractHorseEntity horse) {
-                    this.horseJump = (float) horse.getAttributeValue(EntityAttributes.HORSE_JUMP_STRENGTH);
-                    this.horseSpeed = (float) horse.getAttributeValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+                if (living instanceof AbstractHorse horse) {
+                    this.horseJump = (float) horse.getAttributeValue(Attributes.JUMP_STRENGTH);
+                    this.horseSpeed = (float) horse.getAttributeValue(Attributes.MOVEMENT_SPEED);
                 }
                 
                 // Villager Info
-                if (living instanceof VillagerEntity villager) {
+                if (living instanceof Villager villager) {
                     VillagerData data = villager.getVillagerData();
-                    this.villagerProfession = Registries.VILLAGER_PROFESSION.getId(data.getProfession()).getPath();
-                    this.villagerLevel = data.getLevel();
+                    this.villagerProfession = BuiltInRegistries.VILLAGER_PROFESSION.getKey(data.profession().value()).getPath();
+                    this.villagerLevel = data.level();
                 }
             } else {
                 this.health = -1;
                 this.extraInfo = "Entity";
                 this.targetedEntity = null;
             }
-            this.stack = net.minecraft.item.ItemStack.EMPTY;
+            this.stack = ItemStack.EMPTY;
         } else {
             reset();
         }
@@ -217,7 +221,7 @@ public class TargetInfo {
         this.itemCount = -1;
         this.inventorySize = -1;
         this.harvestLevel = "";
-        this.stack = net.minecraft.item.ItemStack.EMPTY;
+        this.stack = ItemStack.EMPTY;
         this.targetedEntity = null;
     }
 
@@ -251,7 +255,7 @@ public class TargetInfo {
     public int getItemCount() { return itemCount; }
     public int getInventorySize() { return inventorySize; }
     public String getHarvestLevel() { return harvestLevel; }
-    public net.minecraft.item.ItemStack getStack() { return stack; }
+    public ItemStack getStack() { return stack; }
     public LivingEntity getTargetedEntity() { return targetedEntity; }
     public boolean hasTarget() { return !name.isEmpty(); }
 }
